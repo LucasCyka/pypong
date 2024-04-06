@@ -6,7 +6,7 @@
 import math
 import pygame as py
 import os
-
+import time
 
 class Vector2D():
     x = 0
@@ -75,6 +75,8 @@ class Ball(py.sprite.Sprite):
         self.image = load_image("ball.png")
         self.rect = self.image.get_rect()
         self.position = position
+        self.velocity = Vector2D(1,0)
+        self._speed = 2.0
 
         self.rect.right = position.x
         self.rect.top = position.y
@@ -139,6 +141,8 @@ screenSize = Vector2D(800,600)
 screenSurface = None
 running = True
 backgroundColor = "black"
+scorePlayer1 = 0
+scorePlayer2 = 0
 
 def load_image(name):
     img = py.image.load(os.path.join(mainDir,name))
@@ -153,10 +157,18 @@ def init_screen():
     screenSurface = py.display.set_mode(screenSize.get())
     py.display.set_caption("PONG")
 
+def check_gameover(ball):
+    global running
+
+    if ball.position.x > screenSize.x+20 or ball.position.x < -20:
+        running = False
+
 def main():
-    init_screen()
+    #init_screen()
     global running
     global screenSurface
+    global scorePlayer1
+    global scorePlayer2
     wall1 = Wall("wall.png",Vector2D(100,0))
     wall2 = Wall("wall.png",Vector2D(100,590))
     player1 = Player(Vector2D(30+100,(screenSize.y/2)-50))
@@ -164,10 +176,15 @@ def main():
     ball = Ball(Vector2D(screenSize.x/2+8,screenSize.y/2-8),[player1,player2,wall1,wall2])
     sprites = py.sprite.RenderPlain([player1,player2,ball,wall1,wall2])
     clock = py.time.Clock()
+    font = py.font.Font(None,54)
+    
+    running = True
+    ball.padLastCollision = player1
+    
 
     while running:
         clock.tick(60)
-
+        text = font.render(str(scorePlayer1) + " x " + str(scorePlayer2),True,"white")
         for sprite in sprites:
             sprite.update()
 
@@ -193,11 +210,22 @@ def main():
             else: player2.move(Vector2D(0,1))
         
         screenSurface.fill(backgroundColor)
+        screenSurface.blit(text,(10,10))
         sprites.draw(screenSurface)
         py.display.flip()
+
+        check_gameover(ball)
+    
+    if ball.padLastCollision == player1: scorePlayer1 += 1
+    else: scorePlayer2 += 1
+
+    time.sleep(2)
+
+    main()
 
 
 
 
 if __name__ == "__main__":
+    init_screen()
     main()
