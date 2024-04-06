@@ -36,14 +36,15 @@ class Vector2D():
 class Player(py.sprite.Sprite):
     position = Vector2D(0,0)
     velocity = Vector2D(0,0)
-    _SPEED = 4
+    _SPEED = 8
     _PAD_SIZE = Vector2D(30,100)
 
-    def __init__(self,position):
+    def __init__(self,position,name):
         py.sprite.Sprite.__init__(self)
         self.position = position
         self.image = load_image("pad.png")
         self.rect = self.image.get_rect()
+        self.name = name
 
         self.rect.top = position.y
         self.rect.right = position.x
@@ -66,7 +67,7 @@ class Player(py.sprite.Sprite):
 class Ball(py.sprite.Sprite):
     position = Vector2D(0,0)
     velocity = Vector2D(1,0)
-    padLastCollision = ""
+    padLastCollision = None
     _speed = 2.0
     _colliders = []
 
@@ -75,7 +76,6 @@ class Ball(py.sprite.Sprite):
         self.image = load_image("ball.png")
         self.rect = self.image.get_rect()
         self.position = position
-        self.velocity = Vector2D(1,0)
         self._speed = 2.0
 
         self.rect.right = position.x
@@ -93,7 +93,7 @@ class Ball(py.sprite.Sprite):
 
     def detect_collisions(self):
         for collider in self._colliders:
-            if self.rect.colliderect(collider.rect) and self.padLastCollision != collider:
+            if self.rect.colliderect(collider.rect) and Ball.padLastCollision != collider:
                 self._change_velocity(collider)
                 break
 
@@ -103,7 +103,7 @@ class Ball(py.sprite.Sprite):
             self._speed =  max(min(self._speed+0.5,10),0)
             return
 
-        self.padLastCollision = pad
+        Ball.padLastCollision = pad
 
         _dirY =  (pad.position.y+50) - (self.position.y+8)
         #print(pad.position.y+50)
@@ -171,16 +171,18 @@ def main():
     global scorePlayer2
     wall1 = Wall("wall.png",Vector2D(100,0))
     wall2 = Wall("wall.png",Vector2D(100,590))
-    player1 = Player(Vector2D(30+100,(screenSize.y/2)-50))
-    player2 = Player(Vector2D(screenSize.x-100,(screenSize.y/2)-50))
+    player1 = Player(Vector2D(30+100,(screenSize.y/2)-50),"p1")
+    player2 = Player(Vector2D(screenSize.x-100,(screenSize.y/2)-50),"p2")
     ball = Ball(Vector2D(screenSize.x/2+8,screenSize.y/2-8),[player1,player2,wall1,wall2])
     sprites = py.sprite.RenderPlain([player1,player2,ball,wall1,wall2])
     clock = py.time.Clock()
     font = py.font.Font(None,54)
     
     running = True
-    ball.padLastCollision = player1
-    
+
+    if ball.padLastCollision == None: ball.velocity = Vector2D(1,0)
+    elif ball.padLastCollision.name ==  "p1": ball.velocity = Vector2D(1,0)
+    else: ball.velocity = Vector2D(-1,0)
 
     while running:
         clock.tick(60)
@@ -216,15 +218,12 @@ def main():
 
         check_gameover(ball)
     
-    if ball.padLastCollision == player1: scorePlayer1 += 1
+    if ball.padLastCollision == player1 or ball.padLastCollision == None: scorePlayer1 += 1
     else: scorePlayer2 += 1
 
     time.sleep(2)
 
     main()
-
-
-
 
 if __name__ == "__main__":
     init_screen()
