@@ -8,6 +8,9 @@ import pygame as py
 import os
 import time
 
+if not py.mixer:
+    print("Sound is disabled!")
+
 class Vector2D():
     x = 0
     y = 0
@@ -74,6 +77,7 @@ class Ball(py.sprite.Sprite):
     def __init__(self,position, colliders = []):
         py.sprite.Sprite.__init__(self)
         self.image = load_image("ball.png")
+        self.hitSound = load_sound("audio/ball.ogg")
         self.rect = self.image.get_rect()
         self.position = position
         self._speed = 2.0
@@ -95,6 +99,7 @@ class Ball(py.sprite.Sprite):
         for collider in self._colliders:
             if self.rect.colliderect(collider.rect) and Ball.padLastCollision != collider:
                 self._change_velocity(collider)
+                self.hitSound.play()
                 break
 
     def _change_velocity(self,pad):
@@ -150,6 +155,9 @@ def load_image(name):
 
     return img
 
+def load_sound(name):
+    sound = py.mixer.Sound(os.path.join(mainDir,name))
+    return sound
 
 def init_screen():
     global screenSurface
